@@ -11,22 +11,24 @@ export type Module = {
 };
 
 export type Item = {
-  id: string;
-  name: string;
-  displayName: string;
-  category: string;
-  rarity: string;
-  moduleId: string;
-  holder: string | null;
-  isIdentified: boolean;
-  isCursed: boolean;
-  requiresAttunement: boolean;
-  publicDescription: string;
-  secretDescription?: string;
-  discoveryNote?: string;
-  chargesCurrent?: number;
-  chargesMax?: number;
-  rechargesOn?: string;
+    id: string;
+    name: string;
+    displayName: string;
+    category: string;
+    rarity: string;
+    moduleId: string;
+    holder: string | null;
+    isIdentified: boolean;
+    isCursed: boolean;
+    requiresAttunement: boolean;
+    publicDescription: string;
+    secretDescription?: string;
+    discoveryNote?: string;
+    chargesCurrent?: number;
+    chargesMax?: number;
+    rechargesOn?: string;
+    unidentifiedImageUrl?: string;
+    identifiedImageUrl?: string;
 };
 
 export const modules: Module[] = [

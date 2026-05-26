@@ -27,6 +27,10 @@ export default async function ItemDetailPage({ params }: PageProps) {
   ? getModuleDisplayTitle(campaignModule)
   : null;
 
+    const itemImageUrl = item.isIdentified
+    ? item.identifiedImageUrl
+    : item.unidentifiedImageUrl;
+
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
       <section className="mx-auto min-h-screen w-full max-w-3xl px-4 py-5 sm:px-6">
@@ -45,6 +49,15 @@ export default async function ItemDetailPage({ params }: PageProps) {
         </header>
 
         <div className="mt-5 space-y-4">
+            {itemImageUrl && (
+            <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/70">
+                <img
+                src={itemImageUrl}
+                alt={item.isIdentified ? item.name : item.displayName}
+                className="aspect-[4/3] w-full object-cover"
+                />
+            </section>
+            )}
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="rounded-full border border-red-900/60 bg-red-950/40 px-3 py-1 text-red-300">

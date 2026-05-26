@@ -69,6 +69,9 @@ export default function VaultPage() {
             {items.map((item) => {
               const campaignModule = modules.find((m) => m.id === item.moduleId);
               const moduleTitle = campaignModule ? getModuleDisplayTitle(campaignModule) : null;
+              const itemImageUrl = item.isIdentified
+                ? item.identifiedImageUrl
+                : item.unidentifiedImageUrl;
 
               return (
                 <Link
@@ -83,7 +86,14 @@ export default function VaultPage() {
                       </p>
 
                       <h2 className="mt-1 text-lg font-semibold">
-                        {item.isIdentified ? item.name : item.displayName}
+                       
+                        {itemImageUrl && (
+                        <img
+                            src={itemImageUrl}
+                            alt={item.isIdentified ? item.name : item.displayName}
+                            className="mb-4 aspect-[16/9] w-full rounded-xl object-cover"
+                        />
+                        )}
                       </h2>
                     </div>
 
