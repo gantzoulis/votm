@@ -30,4 +30,24 @@ export type Item = {
   unidentified_image_url: string | null;
   identified_image_url: string | null;
   revealed_description: string | null;
+   holder?: {
+    id: string;
+    name: string;
+  } | null;
+  is_container: boolean;
+  parent_item_id: string | null;
+
+  container?: {
+    id: string;
+    name: string;
+    display_name: string;
+    is_identified: boolean;
+  } | null;
+};
+
+export type Character = {
+  id: string;
+  campaign_id: string;
+  name: string;
+  portrait_url: string | null;
 };

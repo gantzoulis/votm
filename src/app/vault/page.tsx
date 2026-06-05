@@ -42,10 +42,22 @@ export default async function VaultPage({ searchParams }: PageProps) {
     .in("status", ["active", "completed"])
     .order("module_order", { ascending: true });
 
-  let itemsQuery = supabase
-    .from("items")
-    .select("*")
-    .eq("campaign_id", campaign.id);
+ let itemsQuery = supabase
+  .from("items")
+  .select(`
+    *,
+    holder:characters (
+      id,
+      name
+    ),
+    container:items!items_parent_item_id_fkey (
+      id,
+      name,
+      display_name,
+      is_identified
+    )
+  `)
+  .eq("campaign_id", campaign.id);
 
   if (filters.rarity) {
     itemsQuery = itemsQuery.eq("rarity", filters.rarity);
@@ -161,7 +173,7 @@ export default async function VaultPage({ searchParams }: PageProps) {
                   Requires attunement
                 </span>
               )}
-
+             
               <Link
                 href="/vault"
                 className="rounded-full border border-red-900/60 bg-red-950/40 px-3 py-1 text-xs text-red-300"
@@ -257,8 +269,11 @@ export default async function VaultPage({ searchParams }: PageProps) {
                         <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
                           {moduleTitle}
                         </span>
+                        
                       )}
-
+                      <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                          Held by: {item.holder?.name ?? "Party Stash"}
+                      </span>
                       {item.requires_attunement && (
                         <Link
                           href="/vault?attunement=true"
@@ -266,6 +281,21 @@ export default async function VaultPage({ searchParams }: PageProps) {
                         >
                           Requires attunement
                         </Link>
+                      )}
+
+                      {item.is_container && (
+                        <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                          Container
+                        </span>
+                      )}
+
+                      {item.container && (
+                        <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                          Inside:{" "}
+                          {item.container.is_identified
+                            ? item.container.name
+                            : item.container.display_name}
+                        </span>
                       )}
 
                       {item.charges_max !== null && (

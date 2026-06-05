@@ -58,6 +58,14 @@ export default async function ItemDetailPage({ params }: PageProps) {
     ? vaultItem.revealed_description ?? vaultItem.public_description
     : vaultItem.public_description;
 
+  const { data: holderCharacter } = vaultItem.holder_character_id
+    ? await supabase
+        .from("characters")
+        .select("*")
+        .eq("id", vaultItem.holder_character_id)
+        .maybeSingle()
+    : { data: null };
+
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
       <section className="mx-auto min-h-screen w-full max-w-3xl px-4 py-5 sm:px-6">
@@ -126,7 +134,9 @@ export default async function ItemDetailPage({ params }: PageProps) {
                 </span>
               )}
 
-             
+              <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                  Held by: {holderCharacter?.name ?? "Party Stash"}
+              </span>
             </div>
 {vaultItem.charges_max !== null && (
               <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">

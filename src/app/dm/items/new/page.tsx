@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createItem } from "./actions";
 import type { CampaignModule } from "@/types/votm";
+import { ImageUploadField } from "@/components/ImageUploadField";
+
 
 export default async function NewItemPage() {
   const supabase = await createClient();
@@ -79,13 +81,13 @@ export default async function NewItemPage() {
 
           <div className="space-y-2">
             <label className="text-sm text-zinc-300">
-              Unidentified Image URL
+              Unidentified Image
             </label>
-            <input
+            <ImageUploadField
+              id="unidentifiedImageUrl"
               name="unidentifiedImageUrl"
-              type="url"
-              placeholder="https://..."
-              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none transition focus:border-red-700"
+              label="Unidentified Image"
+              folder="unidentified"
             />
           </div>
 
@@ -93,11 +95,11 @@ export default async function NewItemPage() {
             <label className="text-sm text-zinc-300">
               Identified Image URL
             </label>
-            <input
+            <ImageUploadField
+              id="identifiedImageUrl"
               name="identifiedImageUrl"
-              type="url"
-              placeholder="https://..."
-              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none transition focus:border-red-700"
+              label="Identified Image"
+              folder="identified"
             />
           </div>
 

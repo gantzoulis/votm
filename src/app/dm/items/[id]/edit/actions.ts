@@ -31,6 +31,7 @@ export async function updateItem(itemId: string, formData: FormData) {
     public_description: String(formData.get("publicDescription") ?? "").trim(),
     secret_description: toNullableString(formData.get("secretDescription")),
     discovery_note: toNullableString(formData.get("discoveryNote")),
+    holder_character_id: toNullableString(formData.get("holderCharacterId")),
 
     is_identified: formData.get("isIdentified") === "on",
     is_cursed: formData.get("isCursed") === "on",
@@ -43,6 +44,10 @@ export async function updateItem(itemId: string, formData: FormData) {
 
     unidentified_image_url: toNullableString(formData.get("unidentifiedImageUrl")),
     identified_image_url: toNullableString(formData.get("identifiedImageUrl")),
+
+    is_container: formData.get("isContainer") === "on",
+    parent_item_id: toNullableString(formData.get("parentItemId")),
+    
   };
 
   const { error } = await supabase

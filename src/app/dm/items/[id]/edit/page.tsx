@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { CampaignModule, Item } from "@/types/votm";
+import type { CampaignModule, Item, Character } from "@/types/votm";
 import { updateItem } from "./actions";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -29,9 +30,27 @@ export default async function EditItemPage({ params }: PageProps) {
     .in("status", ["active", "completed"])
     .order("module_order", { ascending: true });
 
+    const { data: characters } = await supabase
+      .from("characters")
+      .select("*")
+      .eq("campaign_id", vaultItem.campaign_id)
+      .order("name", { ascending: true });
+
+   const { data: containerItems } = await supabase
+      .from("items")
+      .select("id, name, display_name, is_identified")
+      .eq("campaign_id", vaultItem.campaign_id)
+      .eq("is_container", true)
+      .neq("id", vaultItem.id)
+      .order("name", { ascending: true });
+
   const visibleModules = (modules ?? []) as CampaignModule[];
 
   const updateItemWithId = updateItem.bind(null, vaultItem.id);
+
+  const campaignCharacters = (characters ?? []) as Character[];
+
+  const containers = containerItems ?? [];
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -91,6 +110,64 @@ export default async function EditItemPage({ params }: PageProps) {
                   {campaignModule.status === "completed"
                     ? campaignModule.title
                     : campaignModule.player_title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="holderCharacterId" className="text-sm text-zinc-300">
+              Held By
+            </label>
+
+            <select
+              id="holderCharacterId"
+              name="holderCharacterId"
+              defaultValue={vaultItem.holder_character_id ?? ""}
+              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none focus:border-red-700"
+            >
+              <option value="">Party Stash</option>
+
+              {campaignCharacters.map((character) => (
+                <option key={character.id} value={character.id}>
+                  {character.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+            <div className="flex items-center gap-3">
+              <input
+                id="isContainer"
+                name="isContainer"
+                type="checkbox"
+                defaultChecked={vaultItem.is_container}
+                className="h-4 w-4"
+              />
+
+              <label htmlFor="isContainer" className="text-sm">
+                This item can contain other items
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="parentItemId" className="text-sm text-zinc-300">
+              Contained In
+            </label>
+
+            <select
+              id="parentItemId"
+              name="parentItemId"
+              defaultValue={vaultItem.parent_item_id ?? ""}
+              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none focus:border-red-700"
+            >
+              <option value="">Not inside another item</option>
+
+              {containers.map((container) => (
+                <option key={container.id} value={container.id}>
+                  {container.is_identified ? container.name : container.display_name}
                 </option>
               ))}
             </select>
@@ -156,14 +233,14 @@ export default async function EditItemPage({ params }: PageProps) {
 
           <div className="space-y-2">
             <label htmlFor="unidentifiedImageUrl" className="text-sm text-zinc-300">
-              Unidentified Image URL
+              Unidentified Image
             </label>
-            <input
+            <ImageUploadField
               id="unidentifiedImageUrl"
               name="unidentifiedImageUrl"
-              type="url"
-              defaultValue={vaultItem.unidentified_image_url ?? ""}
-              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none focus:border-red-700"
+              label="Unidentified Image"
+              folder="unidentified"
+              defaultValue={vaultItem.unidentified_image_url}
             />
           </div>
 
@@ -171,12 +248,12 @@ export default async function EditItemPage({ params }: PageProps) {
             <label htmlFor="identifiedImageUrl" className="text-sm text-zinc-300">
               Identified Image URL
             </label>
-            <input
+            <ImageUploadField
               id="identifiedImageUrl"
               name="identifiedImageUrl"
-              type="url"
-              defaultValue={vaultItem.identified_image_url ?? ""}
-              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none focus:border-red-700"
+              label="Identified Image"
+              folder="identified"
+              defaultValue={vaultItem.identified_image_url}
             />
           </div>
 
