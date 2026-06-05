@@ -59,6 +59,17 @@ export default async function VaultPage({ searchParams }: PageProps) {
   `)
   .eq("campaign_id", campaign.id);
 
+  /*let itemsQuery = supabase
+  .from("items")
+  .select(`
+    *,
+    holder:characters (
+      id,
+      name
+    )
+  `)
+  .eq("campaign_id", campaign.id);*/
+
   if (filters.rarity) {
     itemsQuery = itemsQuery.eq("rarity", filters.rarity);
   }
@@ -79,9 +90,18 @@ export default async function VaultPage({ searchParams }: PageProps) {
     itemsQuery = itemsQuery.eq("requires_attunement", true);
   }
 
-  const { data: items } = await itemsQuery.order("created_at", {
+  const { data: items, error: itemsError } = await itemsQuery.order("created_at", {
     ascending: false,
   });
+
+  console.log("campaign id:", campaign.id);
+  console.log("Items Error:", itemsError);
+  console.log("Items Data:", items);
+
+  /*
+  if (itemsError) {
+  console.error("Items query error:", itemsError);
+}*/
 
   const visibleModules = (modules ?? []) as CampaignModule[];
   const vaultItems = (items ?? []) as Item[];
