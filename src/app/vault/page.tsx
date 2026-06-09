@@ -45,6 +45,8 @@ export default async function VaultPage({ searchParams }: PageProps) {
     .in("status", ["active", "completed"])
     .order("module_order", { ascending: true });
 
+    const viewMode = filters.view === "table" ? "table" : "cards";
+
  /*let itemsQuery = supabase
   .from("items")
   .select(`
@@ -264,6 +266,32 @@ const itemsWithContainers = (items ?? []).map((item) => ({
             + Add New Item
           </Link>
 
+          <section className="flex gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2">
+            <Link
+              href="/vault?view=cards"
+              className={[
+                "flex-1 rounded-xl px-4 py-2 text-center text-sm",
+                viewMode === "cards"
+                  ? "bg-red-950/50 text-red-200"
+                  : "text-zinc-400",
+              ].join(" ")}
+            >
+              Cards
+            </Link>
+
+            <Link
+              href="/vault?view=table"
+              className={[
+                "flex-1 rounded-xl px-4 py-2 text-center text-sm",
+                viewMode === "table"
+                  ? "bg-red-950/50 text-red-200"
+                  : "text-zinc-400",
+              ].join(" ")}
+            >
+              Table
+            </Link>
+          </section>
+
           {hasFilters && (
             <section className="flex flex-wrap gap-2">
               {filters.rarity && (
@@ -320,7 +348,52 @@ const itemsWithContainers = (items ?? []).map((item) => ({
                 No treasures have been recorded yet.
               </p>
             </section>
-          ) : (
+          ) : viewMode === "table" ? (
+            <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/70">
+                {vaultItems.map((item) => {
+                  const itemTitle = item.is_identified ? item.name : item.display_name;
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/vault/items/${item.id}`}
+                      className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <p
+                          className={[
+                            "truncate text-sm font-semibold",
+                            item.is_identified
+                              ? getRarityTitleClass(item.rarity)
+                              : "text-zinc-100",
+                          ].join(" ")}
+                        >
+                          {itemTitle}
+                        </p>
+
+                        <p className="mt-1 truncate text-xs text-zinc-500">
+                          {item.category}
+                          {item.holder?.name ? ` · ${item.holder.name}` : " · Party Stash"}
+                          {item.parent_item_id ? " · Inside container" : ""}
+                        </p>
+                      </div>
+
+                      <span
+                        className={[
+                          "shrink-0 rounded-full border px-2 py-1 text-xs",
+                          item.is_identified
+                            ? getRarityClass(item.rarity)
+                            : "border-red-900/60 bg-red-950/40 text-red-300",
+                        ].join(" ")}
+                      >
+                        {item.is_identified ? item.rarity : "Unidentified"}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </section>
+          ):
+          (
             <section className="space-y-3">
               {vaultItems.map((item) => {
                 const campaignModule = visibleModules.find(
