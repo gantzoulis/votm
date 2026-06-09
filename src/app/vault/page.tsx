@@ -14,6 +14,9 @@ type PageProps = {
     category?: string;
     identified?: string;
     attunement?: string;
+    holder?: string;
+    container?: string;
+    view?: string;
   }>;
 };
 
@@ -42,7 +45,7 @@ export default async function VaultPage({ searchParams }: PageProps) {
     .in("status", ["active", "completed"])
     .order("module_order", { ascending: true });
 
- let itemsQuery = supabase
+ /*let itemsQuery = supabase
   .from("items")
   .select(`
     *,
@@ -57,9 +60,9 @@ export default async function VaultPage({ searchParams }: PageProps) {
       is_identified
     )
   `)
-  .eq("campaign_id", campaign.id);
+  .eq("campaign_id", campaign.id);*/
 
-  /*let itemsQuery = supabase
+  let itemsQuery = supabase
   .from("items")
   .select(`
     *,
@@ -68,7 +71,7 @@ export default async function VaultPage({ searchParams }: PageProps) {
       name
     )
   `)
-  .eq("campaign_id", campaign.id);*/
+  .eq("campaign_id", campaign.id);
 
   if (filters.rarity) {
     itemsQuery = itemsQuery.eq("rarity", filters.rarity);
@@ -90,9 +93,55 @@ export default async function VaultPage({ searchParams }: PageProps) {
     itemsQuery = itemsQuery.eq("requires_attunement", true);
   }
 
-  const { data: items, error: itemsError } = await itemsQuery.order("created_at", {
+  if (filters.holder === "stash") {
+  itemsQuery = itemsQuery.is("holder_character_id", null);
+  } else if (filters.holder) {
+    itemsQuery = itemsQuery.eq("holder_character_id", filters.holder);
+  }
+
+  if (filters.container) {
+    itemsQuery = itemsQuery.eq("parent_item_id", filters.container);
+  }
+
+  /*const { data: items, error: itemsError } = await itemsQuery.order("created_at", {
     ascending: false,
-  });
+  });*/
+
+const { data: items, error: itemsError } = await itemsQuery.order("created_at", {
+  ascending: false,
+});
+
+if (itemsError) {
+  console.error("Items query error:", itemsError);
+}
+
+const parentItemIds = [
+  ...new Set(
+    (items ?? [])
+      .map((item) => item.parent_item_id)
+      .filter(Boolean),
+  ),
+] as string[];
+
+const { data: containerItems } =
+  parentItemIds.length > 0
+    ? await supabase
+        .from("items")
+        .select("id, name, display_name, is_identified")
+        .in("id", parentItemIds)
+    : { data: [] };
+
+const containerById = new Map(
+  (containerItems ?? []).map((container) => [container.id, container]),
+);
+
+const itemsWithContainers = (items ?? []).map((item) => ({
+  ...item,
+  container: item.parent_item_id
+    ? containerById.get(item.parent_item_id) ?? null
+    : null,
+}));
+
 
   console.log("campaign id:", campaign.id);
   console.log("Items Error:", itemsError);
@@ -104,10 +153,59 @@ export default async function VaultPage({ searchParams }: PageProps) {
 }*/
 
   const visibleModules = (modules ?? []) as CampaignModule[];
-  const vaultItems = (items ?? []) as Item[];
+  const vaultItems = itemsWithContainers as Item[];
   const activeModule = visibleModules.find((m) => m.status === "active");
 
   const hasFilters = Object.values(filters).some(Boolean);
+
+  function getRarityClass(rarity: string) {
+  switch (rarity) {
+    case "Common":
+      return "border-zinc-700 bg-zinc-800 text-zinc-300";
+    case "Uncommon":
+      return "border-green-900/70 bg-green-950/40 text-green-300";
+    case "Rare":
+      return "border-blue-900/70 bg-blue-950/40 text-blue-300";
+    case "Very Rare":
+      return "border-purple-900/70 bg-purple-950/40 text-purple-300";
+    case "Legendary":
+      return "border-amber-900/70 bg-amber-950/40 text-amber-300";
+    case "Artifact":
+      return "border-orange-900/70 bg-orange-950/40 text-orange-300";
+    case "Unique":
+      return "border-red-900/70 bg-red-950/40 text-red-300";
+    default:
+      return "border-zinc-700 bg-zinc-800 text-zinc-300";
+  }
+}
+
+    function getRarityTitleClass(rarity: string) {
+      switch (rarity) {
+        case "Common":
+          return "text-zinc-100";
+
+        case "Uncommon":
+          return "text-green-400";
+
+        case "Rare":
+          return "text-blue-400";
+
+        case "Very Rare":
+          return "text-purple-400";
+
+        case "Legendary":
+          return "text-amber-400 drop-shadow-sm";
+
+        case "Artifact":
+          return "text-orange-400 drop-shadow-sm";
+
+        case "Unique":
+           return "text-red-400 drop-shadow-sm";
+
+        default:
+          return "text-zinc-100";
+      }
+    }
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -194,6 +292,18 @@ export default async function VaultPage({ searchParams }: PageProps) {
                 </span>
               )}
              
+              {filters.holder && (
+                <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs">
+                  Holder Filter
+                </span>
+              )}
+
+              {filters.container && (
+                <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs">
+                  Container Filter
+                </span>
+              )}
+
               <Link
                 href="/vault"
                 className="rounded-full border border-red-900/60 bg-red-950/40 px-3 py-1 text-xs text-red-300"
@@ -233,107 +343,132 @@ export default async function VaultPage({ searchParams }: PageProps) {
                     ? item.revealed_description ?? item.public_description
                     : item.public_description;
 
-                return (
-                  <article
-                    key={item.id}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 shadow-lg"
-                  >
-                    <Link href={`/vault/items/${item.id}`} className="block">
-                      {itemImageUrl && (
+               return (
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 shadow-lg"
+                >
+                  <div className="flex gap-4">
+                    {itemImageUrl && (
+                      <Link
+                        href={`/vault/items/${item.id}`}
+                        className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-zinc-800 sm:h-36 sm:w-36"
+                      >
                         <img
                           src={itemImageUrl}
                           alt={itemTitle}
-                          className="mb-4 aspect-[16/9] w-full rounded-xl object-cover"
+                          className="h-full w-full object-cover"
                         />
-                      )}
+                      </Link>
+                    )}
 
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                            {item.category}
-                          </p>
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/vault/items/${item.id}`} className="block">
+                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                          {item.category}
+                        </p>
 
-                          <h2 className="mt-1 text-lg font-semibold">
-                            {itemTitle}
-                          </h2>
-                        </div>
-                      </div>
+                        <h2
+                          className={[
+                            "mt-1 text-lg font-semibold",
+                            item.is_identified
+                              ? getRarityTitleClass(item.rarity)
+                              : "text-zinc-100",
+                          ].join(" ")}
+                        >
+                          {itemTitle}
+                        </h2>
 
-                      <p className="mt-3 text-sm leading-6 text-zinc-300">
-                         {itemDescription}
-                      </p>
-                    </Link>
-
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                      <Link
-                        href={
-                          item.is_identified
-                            ? `/vault?rarity=${encodeURIComponent(item.rarity)}`
-                            : "/vault?identified=false"
-                        }
-                        className="rounded-full border border-red-900/60 bg-red-950/40 px-3 py-1 text-red-300"
-                      >
-                        {item.is_identified ? item.rarity : "Unidentified"}
+                        <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-300">
+                          {itemDescription}
+                        </p>
                       </Link>
 
-                      <Link
-                        href={`/vault?category=${encodeURIComponent(
-                          item.category,
-                        )}`}
-                        className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300"
-                      >
-                        {item.category}
-                      </Link>
-
-                      {moduleTitle && (
-                        <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                          {moduleTitle}
-                        </span>
-                        
-                      )}
-                      <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                          Held by: {item.holder?.name ?? "Party Stash"}
-                      </span>
-                      {item.requires_attunement && (
+                      <div className="mt-4 flex flex-wrap gap-2 text-xs">
                         <Link
-                          href="/vault?attunement=true"
+                          href={
+                            item.is_identified
+                              ? `/vault?rarity=${encodeURIComponent(item.rarity)}`
+                              : "/vault?identified=false"
+                          }
+                          className={[
+                            "rounded-full border px-3 py-1",
+                            item.is_identified
+                              ? getRarityClass(item.rarity)
+                              : "border-red-900/60 bg-red-950/40 text-red-300",
+                          ].join(" ")}
+                        >
+                          {item.is_identified ? item.rarity : "Unidentified"}
+                        </Link>
+
+                        <Link
+                          href={`/vault?category=${encodeURIComponent(item.category)}`}
                           className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300"
                         >
-                          Requires attunement
+                          {item.category}
                         </Link>
-                      )}
 
-                      {item.is_container && (
-                        <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                          Container
-                        </span>
-                      )}
+                        {moduleTitle && (
+                          <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                            {moduleTitle}
+                          </span>
+                        )}
 
-                      {item.container && (
-                        <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                          Inside:{" "}
-                          {item.container.is_identified
-                            ? item.container.name
-                            : item.container.display_name}
-                        </span>
-                      )}
+                        <Link
+                          href={
+                            item.holder
+                              ? `/vault?holder=${item.holder.id}`
+                              : "/vault?holder=stash"
+                          }
+                          className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300"
+                        >
+                          Held by: {item.holder?.name ?? "Party Stash"}
+                        </Link>
 
-                      {item.charges_max !== null && (
-                        <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                          Charges {item.charges_current ?? 0}/
-                          {item.charges_max}
-                        </span>
-                      )}
+                        {item.is_container && (
+                          <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                            Container
+                          </span>
+                        )}
+
+                        {item.container && (
+                          <Link
+                            href={`/vault?container=${item.parent_item_id}`}
+                            className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300"
+                          >
+                            Inside:{" "}
+                            {item.container.is_identified
+                              ? item.container.name
+                              : item.container.display_name}
+                          </Link>
+                        )}
+
+                        {item.requires_attunement && (
+                          <Link
+                            href="/vault?attunement=true"
+                            className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300"
+                          >
+                            Requires attunement
+                          </Link>
+                        )}
+
+                        {item.charges_max !== null && (
+                          <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                            Charges {item.charges_current ?? 0}/{item.charges_max}
+                          </span>
+                        )}
+                      </div>
+
+                      <Link
+                        href={`/vault/items/${item.id}`}
+                        className="mt-4 inline-flex rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
+                      >
+                        View Item
+                      </Link>
                     </div>
-
-                    <Link
-                      href={`/vault/items/${item.id}`}
-                      className="mt-4 inline-flex rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
-                    >
-                      View Item
-                    </Link>
-                  </article>
-                );
+                  </div>
+                </article>
+              );
               })}
             </section>
           )}

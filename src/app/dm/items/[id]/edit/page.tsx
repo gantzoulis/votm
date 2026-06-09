@@ -233,7 +233,7 @@ export default async function EditItemPage({ params }: PageProps) {
 
           <div className="space-y-2">
             <label htmlFor="unidentifiedImageUrl" className="text-sm text-zinc-300">
-              Unidentified Image
+              
             </label>
             <ImageUploadField
               id="unidentifiedImageUrl"
@@ -246,7 +246,7 @@ export default async function EditItemPage({ params }: PageProps) {
 
           <div className="space-y-2">
             <label htmlFor="identifiedImageUrl" className="text-sm text-zinc-300">
-              Identified Image URL
+              
             </label>
             <ImageUploadField
               id="identifiedImageUrl"
