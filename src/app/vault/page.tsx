@@ -145,9 +145,9 @@ const itemsWithContainers = (items ?? []).map((item) => ({
 }));
 
 
-  console.log("campaign id:", campaign.id);
+  /*console.log("campaign id:", campaign.id);
   console.log("Items Error:", itemsError);
-  console.log("Items Data:", items);
+  console.log("Items Data:", items);*/
 
   /*
   if (itemsError) {
@@ -214,7 +214,7 @@ const itemsWithContainers = (items ?? []).map((item) => ({
       <section className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-5 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-10 -mx-4 border-b border-zinc-800 bg-zinc-950/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <p className="text-xs uppercase tracking-[0.28em] text-red-400">
-            Vault of the Mists
+            Vault of the Mists (v.0.9626)
           </p>
 
           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
