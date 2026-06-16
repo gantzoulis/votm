@@ -7,6 +7,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   async function handleLogin() {
     const supabase = createClient();
 
@@ -17,9 +20,14 @@ export default function LoginPage() {
       },
     });
 
-    if (!error) {
-      setSent(true);
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
     }
+
+    setSent(true);
+    setLoading(false);
   }
 
   return (
@@ -45,10 +53,16 @@ export default function LoginPage() {
 
             <button
               onClick={handleLogin}
+              disabled={loading || sent}
               className="mt-4 w-full rounded-xl bg-red-900 px-4 py-3 text-white"
             >
-              Send Magic Link
+             { loading ? "Sending through the Mists" : "Send Magic Link"} 
             </button>
+            {errorMessage && (
+              <p className="mt-3 text-sm text-red-300">
+                {errorMessage}
+              </p>
+            )}
           </>
         )}
       </div>
