@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { CampaignModule, Item } from "@/types/votm";
+import { redirect } from "next/navigation";
+import { getCampaignAccess } from "@/lib/auth/access";
 
 function getModuleDisplayTitle(campaignModule: CampaignModule) {
   return campaignModule.status === "completed"
@@ -46,6 +48,12 @@ export default async function VaultPage({ searchParams }: PageProps) {
     .order("module_order", { ascending: true });
 
     const viewMode = filters.view === "table" ? "table" : "cards";
+
+  const access = await getCampaignAccess();
+
+    if (!access) {
+      redirect("/login");
+    }
 
  /*let itemsQuery = supabase
   .from("items")
