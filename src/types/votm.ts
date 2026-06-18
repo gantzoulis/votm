@@ -51,3 +51,26 @@ export type Character = {
   name: string;
   portrait_url: string | null;
 };
+
+export type ItemEvent = {
+  id: string;
+  campaign_id: string;
+  item_id: string | null;
+  actor_profile_id: string | null;
+  event_type: string;
+  summary: string;
+  before_data: Record<string, unknown> | null;
+  after_data: Record<string, unknown> | null;
+  created_at: string;
+
+  actor?: {
+    display_name: string;
+  } | null;
+
+  item?: {
+    id: string;
+    name: string;
+    display_name: string;
+    is_identified: boolean;
+  } | null;
+};

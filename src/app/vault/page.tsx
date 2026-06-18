@@ -274,6 +274,15 @@ const itemsWithContainers = (items ?? []).map((item) => ({
             + Add New Item
           </Link>
 
+          {access.isDm && (
+            <Link
+              href="/vault/log"
+              className="block rounded-2xl border border-zinc-800 bg-zinc-900/70 px-4 py-4 text-center text-sm font-semibold text-zinc-200"
+            >
+              View Campaign Log
+            </Link>
+          )}
+
           <section className="flex gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2">
             <Link
               href="/vault?view=cards"
