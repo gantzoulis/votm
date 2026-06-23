@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { CampaignModule, Item } from "@/types/votm";
+import type { CampaignModule, Item, ItemEvent } from "@/types/votm";
+
 import { toggleIdentify } from "./actions";
 import {
   increaseCharges,
@@ -37,6 +38,24 @@ export default async function ItemDetailPage({ params }: PageProps) {
   }
 
   const vaultItem = item as Item;
+
+  const { data: itemEvents, error: itemEventsError } = await supabase
+  .from("item_events")
+  .select(`
+    *,
+    actor:profiles (
+      display_name
+    )
+  `)
+  .eq("item_id", vaultItem.id)
+  .order("created_at", { ascending: false })
+  .limit(20);
+
+if (itemEventsError) {
+  console.error("Item history error:", itemEventsError);
+}
+
+const historyEvents = (itemEvents ?? []) as ItemEvent[];
 
   const { data: campaignModule } = await supabase
     .from("campaign_modules")
@@ -138,7 +157,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                   Held by: {holderCharacter?.name ?? "Party Stash"}
               </span>
             </div>
-{vaultItem.charges_max !== null && (
+              {vaultItem.charges_max !== null && (
               <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                   Charges
@@ -229,6 +248,50 @@ export default async function ItemDetailPage({ params }: PageProps) {
             <p className="mt-3 text-sm text-zinc-400">
               Personal and party notes will appear here.
             </p>
+          </section>
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Item History
+                </p>
+                <h2 className="mt-1 text-lg font-semibold">
+                  Recent changes
+                </h2>
+              </div>
+
+              <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                {historyEvents.length}
+              </span>
+            </div>
+
+            {historyEvents.length === 0 ? (
+              <p className="mt-4 text-sm text-zinc-400">
+                No recorded changes yet.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {historyEvents.map((event) => (
+                  <article
+                    key={event.id}
+                    className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3"
+                  >
+                    <p className="text-sm text-zinc-200">
+                      {event.summary}
+                    </p>
+
+                    <p className="mt-2 text-xs text-zinc-500">
+                      {new Date(event.created_at).toLocaleString()} ·{" "}
+                      {event.actor?.display_name ?? "Unknown actor"}
+                    </p>
+
+                    <span className="mt-2 inline-flex rounded-full bg-zinc-800 px-2 py-1 text-[11px] text-zinc-400">
+                      {event.event_type}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </section>

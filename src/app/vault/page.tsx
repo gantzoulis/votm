@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CampaignModule, Item } from "@/types/votm";
 import { redirect } from "next/navigation";
 import { getCampaignAccess } from "@/lib/auth/access";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 function getModuleDisplayTitle(campaignModule: CampaignModule) {
   return campaignModule.status === "completed"
@@ -25,6 +26,12 @@ type PageProps = {
 export default async function VaultPage({ searchParams }: PageProps) {
   const filters = await searchParams;
   const supabase = await createClient();
+
+  const access = await getCampaignAccess();
+
+    if (!access) {
+      redirect("/login");
+    }
 
   const { data: campaign, error: campaignError } = await supabase
     .from("campaigns")
@@ -49,11 +56,7 @@ export default async function VaultPage({ searchParams }: PageProps) {
 
     const viewMode = filters.view === "table" ? "table" : "cards";
 
-  const access = await getCampaignAccess();
-
-    if (!access) {
-      redirect("/login");
-    }
+  
 
  /*let itemsQuery = supabase
   .from("items")
@@ -222,9 +225,9 @@ const itemsWithContainers = (items ?? []).map((item) => ({
       <section className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-5 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-10 -mx-4 border-b border-zinc-800 bg-zinc-950/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <p className="text-xs uppercase tracking-[0.28em] text-red-400">
-            Vault of the Mists (v.0.9626)
+            Vault of the Mists (v.0.23.0626)
           </p>
-
+          
           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
             {campaign.name}
           </h1>
@@ -232,6 +235,10 @@ const itemsWithContainers = (items ?? []).map((item) => ({
           <p className="mt-1 text-sm text-zinc-400">
             Party treasury & discovered relics
           </p>
+          <p className="text-sm text-zinc-500">
+            {access.displayName} · {access.role.toUpperCase()}
+          </p>
+          <LogoutButton />
         </header>
 
         <div className="mt-5 space-y-5">
