@@ -33,6 +33,10 @@ export default async function VaultPage({ searchParams }: PageProps) {
       redirect("/login");
     }
 
+    if (!access.isDm && !access.hasApprovedCharacter) {
+       redirect("/onboarding");
+    }
+
   const { data: campaign, error: campaignError } = await supabase
     .from("campaigns")
     .select("id, name, slug")
@@ -84,7 +88,11 @@ export default async function VaultPage({ searchParams }: PageProps) {
       name
     )
   `)
-  .eq("campaign_id", campaign.id);
+  .eq("campaign_id", campaign.id)
+  .is("deleted_at", null)
+  if (!access.isDm){
+   itemsQuery = itemsQuery.eq("is_hidden", false); 
+  };
 
   if (filters.rarity) {
     itemsQuery = itemsQuery.eq("rarity", filters.rarity);

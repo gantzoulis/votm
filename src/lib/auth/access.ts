@@ -8,6 +8,9 @@ export type CampaignAccess = {
   role: "dm" | "player";
   isDm: boolean;
   isPlayer: boolean;
+  characterId?: string | null;
+  characterName?: string | null;
+  hasApprovedCharacter: boolean;
 };
 
 export async function getCampaignAccess(
@@ -57,7 +60,15 @@ export async function getCampaignAccess(
     return null;
   }
 
-  console.log("access data", data);
+  //console.log("access data", data);
+
+  const { data: ownedCharacter } = await supabase
+  .from("characters")
+  .select("id, name")
+  .eq("campaign_id", campaign.id)
+  .eq("owner_profile_id", profile.id)
+  .eq("claim_status", "approved")
+  .maybeSingle();
 
   return {
     userId: user.id,
@@ -67,5 +78,8 @@ export async function getCampaignAccess(
     role: data.role,
     isDm: data.role === "dm",
     isPlayer: data.role === "player",
+    characterId: ownedCharacter?.id ?? null,
+    characterName: ownedCharacter?.name ?? null,
+    hasApprovedCharacter: Boolean(ownedCharacter),
   };
 }

@@ -2,11 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { CampaignModule, Item, ItemEvent } from "@/types/votm";
+import { getCampaignAccess } from "@/lib/auth/access";
 
-import { toggleIdentify } from "./actions";
+
+
 import {
   increaseCharges,
   decreaseCharges,
+  toggleIdentify,
+  toggleHiddenItem,
+  softDeleteItem,
 } from "./actions";
 
 
@@ -21,6 +26,8 @@ function getModuleDisplayTitle(campaignModule: CampaignModule) {
     ? campaignModule.title
     : campaignModule.player_title;
 }
+
+const access = await getCampaignAccess();
 
 export default async function ItemDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -140,6 +147,29 @@ const historyEvents = (itemEvents ?? []) as ItemEvent[];
               />
             </section>
           )}
+
+        {access?.isDm && (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+              DM Controls
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <form action={toggleHiddenItem.bind(null, vaultItem.id, vaultItem.is_hidden)}>
+                <button className="rounded-xl bg-zinc-800 px-4 py-3 text-sm text-zinc-100">
+                  {vaultItem.is_hidden ? "Unhide Item" : "Hide Item"}
+                </button>
+              </form>
+
+              <form action={softDeleteItem.bind(null, vaultItem.id)}>
+                <button className="rounded-xl bg-red-950 px-4 py-3 text-sm text-red-200">
+                  Delete Item
+                </button>
+              </form>
+            </div>
+          </section>
+        )}
+
 
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
             <div className="flex flex-wrap gap-2 text-xs">

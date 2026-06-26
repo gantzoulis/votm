@@ -22,6 +22,9 @@ export type Item = {
   discovery_note: string | null;
   is_identified: boolean;
   is_cursed: boolean;
+  is_hidden: boolean;
+  deleted_at: string | null;
+  deleted_by_profile_id: string | null;
   requires_attunement: boolean;
   holder_character_id: string | null;
   charges_current: number | null;
@@ -62,6 +65,7 @@ export type ItemEvent = {
   before_data: Record<string, unknown> | null;
   after_data: Record<string, unknown> | null;
   created_at: string;
+  
 
   actor?: {
     display_name: string;
