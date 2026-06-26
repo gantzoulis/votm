@@ -20,6 +20,7 @@ type PageProps = {
     holder?: string;
     container?: string;
     view?: string;
+    q?: string;
   }>;
 };
 
@@ -61,23 +62,6 @@ export default async function VaultPage({ searchParams }: PageProps) {
     const viewMode = filters.view === "table" ? "table" : "cards";
 
   
-
- /*let itemsQuery = supabase
-  .from("items")
-  .select(`
-    *,
-    holder:characters (
-      id,
-      name
-    ),
-    container:items!items_parent_item_id_fkey (
-      id,
-      name,
-      display_name,
-      is_identified
-    )
-  `)
-  .eq("campaign_id", campaign.id);*/
 
   let itemsQuery = supabase
   .from("items")
@@ -127,6 +111,23 @@ export default async function VaultPage({ searchParams }: PageProps) {
   /*const { data: items, error: itemsError } = await itemsQuery.order("created_at", {
     ascending: false,
   });*/
+
+  if (filters.q) {
+  const searchTerm = filters.q.trim();
+
+  if (searchTerm.length > 0) {
+    itemsQuery = itemsQuery.or(
+      [
+        `name.ilike.%${searchTerm}%`,
+        `display_name.ilike.%${searchTerm}%`,
+        `category.ilike.%${searchTerm}%`,
+        `rarity.ilike.%${searchTerm}%`,
+        `public_description.ilike.%${searchTerm}%`,
+        `revealed_description.ilike.%${searchTerm}%`,
+      ].join(","),
+    );
+  }
+}
 
 const { data: items, error: itemsError } = await itemsQuery.order("created_at", {
   ascending: false,
@@ -323,6 +324,26 @@ const itemsWithContainers = (items ?? []).map((item) => ({
               Table
             </Link>
           </section>
+          <section>
+            <form action="/vault" className="flex gap-2">
+              <input
+                name="q"
+                type="search"
+                defaultValue={filters.q ?? ""}
+                placeholder="Search the Vault..."
+                className="min-w-0 flex-1 rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-red-700"
+              />
+
+              <input type="hidden" name="view" value={viewMode} />
+
+              <button
+                type="submit"
+                className="rounded-2xl border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm font-semibold text-red-200"
+              >
+                Search
+              </button>
+            </form>
+          </section>
 
           {hasFilters && (
             <section className="flex flex-wrap gap-2">
@@ -361,6 +382,11 @@ const itemsWithContainers = (items ?? []).map((item) => ({
               {filters.container && (
                 <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs">
                   Container Filter
+                </span>
+              )}
+              {filters.q && (
+                <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                  Search: {filters.q}
                 </span>
               )}
 
