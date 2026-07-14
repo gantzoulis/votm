@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { CampaignModule, Item, ItemEvent } from "@/types/votm";
 import { getCampaignAccess } from "@/lib/auth/access";
+import { ConfirmAction } from "@/components/forms/ConfirmAction";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 
 
@@ -28,14 +29,16 @@ function getModuleDisplayTitle(campaignModule: CampaignModule) {
     : campaignModule.player_title;
 }
 
-const access = await getCampaignAccess();
 
-if (!access) {
-  redirect("/login");
-}
 
 export default async function ItemDetailPage({ params }: PageProps) {
   const { id } = await params;
+
+  const access = await getCampaignAccess();
+
+  if (!access) {
+    redirect("/login");
+  }
 
   const supabase = await createClient();
 
@@ -176,13 +179,21 @@ const historyEvents = (itemEvents ?? []) as ItemEvent[];
                 />
               </form>
 
-              <form action={softDeleteItem.bind(null, vaultItem.id)}>
-                <SubmitButton
-                  label="Delete Item"
-                  pendingLabel="Deleting..."
-                  variant="danger"
-                />
-              </form>
+              <ConfirmAction
+                title="Delete this item?"
+                description={`"${itemTitle}" will disappear from the Vault. Its audit history will remain available to the DM.`}
+                triggerLabel="Delete Item"
+                confirmLabel="Delete permanently"
+                triggerClassName="rounded-xl bg-red-950 px-4 py-3 text-sm font-semibold text-red-200 transition hover:bg-red-900"
+              >
+                <form action={softDeleteItem.bind(null, vaultItem.id)}>
+                  <SubmitButton
+                    label="Delete Item"
+                    pendingLabel="Deleting..."
+                    variant="danger"
+                  />
+                </form>
+              </ConfirmAction>
             </div>
 
             {vaultItem.is_hidden && (
