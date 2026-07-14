@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCampaignAccess } from "@/lib/auth/access";
 import { approveClaim, rejectClaim } from "./actions";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 
 
  type ClaimRow = {
@@ -87,15 +88,23 @@ export default async function ClaimsPage() {
 
                 <div className="mt-4 flex gap-2">
                   <form action={approveClaim.bind(null, claim.id)}>
-                    <button className="rounded-xl bg-green-900 px-4 py-3 text-sm font-semibold text-green-100">
-                      Approve
-                    </button>
+                    <form action={approveClaim.bind(null, claim.id)}>
+                      <SubmitButton
+                        label="Approve"
+                        pendingLabel="Approving..."
+                        variant="success"
+                      />
+                    </form>
                   </form>
 
                   <form action={rejectClaim.bind(null, claim.id)}>
-                    <button className="rounded-xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-200">
-                      Reject
-                    </button>
+                    <form action={rejectClaim.bind(null, claim.id)}>
+                      <SubmitButton
+                        label="Reject"
+                        pendingLabel="Rejecting..."
+                        variant="secondary"
+                      />
+                    </form>
                   </form>
                 </div>
               </article>

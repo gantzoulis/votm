@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CampaignModule, Item, Character } from "@/types/votm";
 import { updateItem } from "./actions";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -364,12 +365,12 @@ export default async function EditItemPage({ params }: PageProps) {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-2xl bg-red-800 px-4 py-4 text-sm font-semibold transition hover:bg-red-700"
-          >
-            Save Changes
-          </button>
+          
+          <SubmitButton
+            label="Save Changes"
+            pendingLabel="Saving changes..."
+            className="w-full"
+          />
         </form>
       </section>
     </main>

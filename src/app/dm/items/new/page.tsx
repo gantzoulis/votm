@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createItem } from "./actions";
 import type { CampaignModule } from "@/types/votm";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 
 
 export default async function NewItemPage() {
@@ -269,12 +270,11 @@ export default async function NewItemPage() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-2xl bg-red-800 px-4 py-4 text-sm font-semibold transition hover:bg-red-700"
-          >
-            Add Item to the Vault
-          </button>
+          <SubmitButton
+            label="Add Item to the Vault"
+            pendingLabel="Recording item..."
+            className="w-full"
+          />
         </form>
       </section>
     </main>

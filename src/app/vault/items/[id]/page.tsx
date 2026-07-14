@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { CampaignModule, Item, ItemEvent } from "@/types/votm";
 import { getCampaignAccess } from "@/lib/auth/access";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 
 
 
@@ -28,6 +29,10 @@ function getModuleDisplayTitle(campaignModule: CampaignModule) {
 }
 
 const access = await getCampaignAccess();
+
+if (!access) {
+  redirect("/login");
+}
 
 export default async function ItemDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -155,18 +160,36 @@ const historyEvents = (itemEvents ?? []) as ItemEvent[];
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <form action={toggleHiddenItem.bind(null, vaultItem.id, vaultItem.is_hidden)}>
-                <button className="rounded-xl bg-zinc-800 px-4 py-3 text-sm text-zinc-100">
-                  {vaultItem.is_hidden ? "Unhide Item" : "Hide Item"}
-                </button>
+              <form
+                action={toggleHiddenItem.bind(
+                  null,
+                  vaultItem.id,
+                  vaultItem.is_hidden,
+                )}
+              >
+                <SubmitButton
+                  label={vaultItem.is_hidden ? "Unhide Item" : "Hide Item"}
+                  pendingLabel={
+                    vaultItem.is_hidden ? "Unhiding..." : "Hiding..."
+                  }
+                  variant="secondary"
+                />
               </form>
 
               <form action={softDeleteItem.bind(null, vaultItem.id)}>
-                <button className="rounded-xl bg-red-950 px-4 py-3 text-sm text-red-200">
-                  Delete Item
-                </button>
+                <SubmitButton
+                  label="Delete Item"
+                  pendingLabel="Deleting..."
+                  variant="danger"
+                />
               </form>
             </div>
+
+            {vaultItem.is_hidden && (
+              <p className="mt-3 text-sm text-amber-300">
+                This item is currently hidden from players.
+              </p>
+            )}
           </section>
         )}
 
