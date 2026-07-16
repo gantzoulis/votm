@@ -292,7 +292,7 @@ const itemsWithContainers = (items ?? []).map((item) => ({
           {access.characterId && (
             <Link
               href={`/characters/${access.characterId}`}
-              className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300"
+              className="block rounded-2xl border border-red-900/60 bg-red-950/30 px-4 py-4 text-center text-sm font-semibold text-red-200"
             >
               My Character
             </Link>

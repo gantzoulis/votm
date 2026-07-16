@@ -110,7 +110,56 @@ export default async function CharacterDetailPage({ params }: PageProps) {
     console.error("Character items error:", itemsError);
   }
 
-  const characterItems = (itemData ?? []) as Item[];
+  //const characterItems = (itemData ?? []) as Item[];
+    const directlyHeldItems = (itemData ?? []) as Item[];
+    const containerIds = directlyHeldItems
+    .filter((item) => item.is_container)
+    .map((item) => item.id);
+
+    const { data: containedItemData, error: containedItemsError } =
+    containerIds.length > 0
+        ? await supabase
+            .from("items")
+            .select("*")
+            .eq("campaign_id", access.campaignId)
+            .in("parent_item_id", containerIds)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+        : { data: [], error: null };
+
+    if (containedItemsError) {
+    console.error("Contained items error:", containedItemsError);
+    }
+
+ 
+
+const containedItems = (containedItemData ?? []) as Item[];
+
+   const visibleContainedItems = access.isDm
+    ? containedItems
+    : containedItems.filter((item) => !item.is_hidden);
+
+    const visibleDirectItems = access.isDm
+    ? directlyHeldItems
+    : directlyHeldItems.filter((item) => !item.is_hidden);
+
+    const containedItemsByContainerId = new Map<string, Item[]>();
+
+    for (const item of visibleContainedItems) {
+    if (!item.parent_item_id) {
+        continue;
+    }
+
+    const currentItems =
+        containedItemsByContainerId.get(item.parent_item_id) ?? [];
+
+    currentItems.push(item);
+
+    containedItemsByContainerId.set(
+        item.parent_item_id,
+        currentItems,
+    );
+    }
 
   const totalLevel = character.classes.reduce(
     (total, characterClass) => total + characterClass.class_level,
@@ -214,11 +263,11 @@ export default async function CharacterDetailPage({ params }: PageProps) {
             </div>
 
             <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
-              {characterItems.length}
+              {visibleDirectItems.length + visibleContainedItems.length}
             </span>
           </div>
 
-          {characterItems.length === 0 ? (
+          {visibleDirectItems.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5">
               <p className="text-sm text-zinc-400">
                 This character carries no recorded items.
@@ -226,7 +275,7 @@ export default async function CharacterDetailPage({ params }: PageProps) {
             </div>
           ) : (
             <div className="mt-4 space-y-3">
-              {characterItems.map((item) => {
+              {visibleDirectItems.map((item) => {
                 const itemTitle = item.is_identified
                   ? item.name
                   : item.display_name;
@@ -239,70 +288,136 @@ export default async function CharacterDetailPage({ params }: PageProps) {
                   ? item.identified_image_url
                   : item.unidentified_image_url;
 
+                const nestedItems = item.is_container
+                    ? containedItemsByContainerId.get(item.id) ?? []
+                    : [];
+
                 return (
-                  <article
-                    key={item.id}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4"
-                  >
-                    <div className="flex gap-4">
-                      {itemImageUrl && (
-                        <Link
-                          href={`/vault/items/${item.id}`}
-                          className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-800"
-                        >
-                          <img
-                            src={itemImageUrl}
-                            alt={itemTitle}
-                            className="h-full w-full object-cover"
-                          />
-                        </Link>
-                      )}
+                  <div key={item.id}>
+    <article className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+      <div className="flex gap-4">
+        {itemImageUrl && (
+          <Link
+            href={`/vault/items/${item.id}`}
+            className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-800"
+          >
+            <img
+              src={itemImageUrl}
+              alt={itemTitle}
+              className="h-full w-full object-cover"
+            />
+          </Link>
+        )}
 
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/vault/items/${item.id}`}>
-                          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                            {item.category}
-                          </p>
+        <div className="min-w-0 flex-1">
+          <Link href={`/vault/items/${item.id}`}>
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+              {item.category}
+            </p>
 
-                          <h3
-                            className={[
-                              "mt-1 text-lg font-semibold",
-                              item.is_identified
-                                ? getRarityTitleClass(item.rarity)
-                                : "text-zinc-100",
-                            ].join(" ")}
-                          >
-                            {itemTitle}
-                          </h3>
+            <h3
+              className={[
+                "mt-1 text-lg font-semibold",
+                item.is_identified
+                  ? getRarityTitleClass(item.rarity)
+                  : "text-zinc-100",
+              ].join(" ")}
+            >
+              {itemTitle}
+            </h3>
 
-                          <p className="mt-2 line-clamp-2 text-sm leading-6 text-zinc-400">
-                            {itemDescription}
-                          </p>
-                        </Link>
+            <p className="mt-2 line-clamp-2 text-sm leading-6 text-zinc-400">
+              {itemDescription}
+            </p>
+          </Link>
 
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                          <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                            {item.is_identified
-                              ? item.rarity
-                              : "Unidentified"}
-                          </span>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+              {item.is_identified
+                ? item.rarity
+                : "Unidentified"}
+            </span>
 
-                          {item.charges_max !== null && (
-                            <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                              Charges {item.charges_current ?? 0}/
-                              {item.charges_max}
-                            </span>
-                          )}
+            {item.charges_max !== null && (
+              <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                Charges {item.charges_current ?? 0}/{item.charges_max}
+              </span>
+            )}
 
-                          {item.is_container && (
-                            <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
-                              Container
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
+            {item.is_container && (
+              <span className="rounded-full bg-zinc-800 px-3 py-1 text-zinc-300">
+                Container · {nestedItems.length} items
+              </span>
+            )}
+
+            {item.is_hidden && access.isDm && (
+              <span className="rounded-full border border-amber-900/60 bg-amber-950/30 px-3 py-1 text-amber-300">
+                Hidden
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+
+    {nestedItems.length > 0 && (
+      <section className="ml-5 mt-2 space-y-2 border-l border-zinc-800 pl-4">
+        <p className="px-1 text-xs uppercase tracking-[0.2em] text-zinc-500">
+          Inside {itemTitle}
+        </p>
+
+        {nestedItems.map((nestedItem) => {
+          const nestedTitle = nestedItem.is_identified
+            ? nestedItem.name
+            : nestedItem.display_name;
+
+          const nestedImageUrl = nestedItem.is_identified
+            ? nestedItem.identified_image_url
+            : nestedItem.unidentified_image_url;
+
+          return (
+            <Link
+              key={nestedItem.id}
+              href={`/vault/items/${nestedItem.id}`}
+              className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 transition hover:bg-zinc-900"
+            >
+              {nestedImageUrl && (
+                <img
+                  src={nestedImageUrl}
+                  alt={nestedTitle}
+                  className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                />
+              )}
+
+              <div className="min-w-0 flex-1">
+                <p
+                  className={[
+                    "truncate text-sm font-semibold",
+                    nestedItem.is_identified
+                      ? getRarityTitleClass(nestedItem.rarity)
+                      : "text-zinc-100",
+                  ].join(" ")}
+                >
+                  {nestedTitle}
+                </p>
+
+                <p className="mt-1 truncate text-xs text-zinc-500">
+                  {nestedItem.category}
+                  {nestedItem.charges_max !== null
+                    ? ` · Charges ${
+                        nestedItem.charges_current ?? 0
+                      }/${nestedItem.charges_max}`
+                    : ""}
+                </p>
+              </div>
+
+              <span className="text-zinc-600">›</span>
+            </Link>
+                );
+                })}
+                </section>
+                )}
+            </div>
                 );
               })}
             </div>
