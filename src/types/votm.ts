@@ -53,6 +53,19 @@ export type Character = {
   campaign_id: string;
   name: string;
   portrait_url: string | null;
+  race: string | null;
+  current_xp: number;
+  next_level_xp: number | null;
+  classes?: CharacterClass[]; 
+};
+
+export type CharacterClass = {
+  id: string;
+  character_id: string;
+  class_name: string;
+  subclass_name: string | null;
+  class_level: number;
+  created_at: string;
 };
 
 export type ItemEvent = {

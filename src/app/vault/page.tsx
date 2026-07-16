@@ -289,7 +289,14 @@ const itemsWithContainers = (items ?? []).map((item) => ({
           >
             + Add New Item
           </Link>
-
+          {access.characterId && (
+            <Link
+              href={`/characters/${access.characterId}`}
+              className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300"
+            >
+              My Character
+            </Link>
+          )}
           {access.isDm && (
             <Link
               href="/vault/log"
@@ -298,6 +305,14 @@ const itemsWithContainers = (items ?? []).map((item) => ({
               View Campaign Log
             </Link>
           )}
+          {access.isDm && (
+              <Link
+                href="/dm/characters"
+                className="block rounded-2xl border border-zinc-800 bg-zinc-900/70 px-4 py-4 text-center text-sm font-semibold text-zinc-200"
+              >
+                Manage Characters
+              </Link>
+            )}
 
           <section className="flex gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2">
             <Link

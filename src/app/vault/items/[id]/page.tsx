@@ -194,6 +194,7 @@ const historyEvents = (itemEvents ?? []) as ItemEvent[];
                   />
                 </form>
               </ConfirmAction>
+         
             </div>
 
             {vaultItem.is_hidden && (
