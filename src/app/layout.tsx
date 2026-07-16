@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { APP } from "@/config/app";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VotM 0.03.7",
-  description: "Vault of the Mists",
+  title: `${APP.shortName} v${APP.shortVersion}`,
+  description: APP.name,
 };
 
 export default function RootLayout({

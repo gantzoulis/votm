@@ -87,7 +87,7 @@ export default async function ClaimsPage() {
                 </p>
 
                 <div className="mt-4 flex gap-2">
-                  <form action={approveClaim.bind(null, claim.id)}>
+                  
                     <form action={approveClaim.bind(null, claim.id)}>
                       <SubmitButton
                         label="Approve"
@@ -95,9 +95,7 @@ export default async function ClaimsPage() {
                         variant="success"
                       />
                     </form>
-                  </form>
-
-                  <form action={rejectClaim.bind(null, claim.id)}>
+                  
                     <form action={rejectClaim.bind(null, claim.id)}>
                       <SubmitButton
                         label="Reject"
@@ -105,7 +103,7 @@ export default async function ClaimsPage() {
                         variant="secondary"
                       />
                     </form>
-                  </form>
+                  
                 </div>
               </article>
             ))
