@@ -2,6 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCampaignAccess } from "@/lib/auth/access";
+import { ConfirmAction } from "@/components/forms/ConfirmAction";
+import { SubmitButton } from "@/components/forms/SubmitButton";
+import { unclaimCharacter } from "./[id]/actions";
 
 type CharacterRow = {
   id: string;
@@ -168,6 +171,22 @@ export default async function CharactersPage() {
                     >
                       Edit
                     </Link>
+                    {character.claim_status === "approved" && (
+                    <ConfirmAction
+                      title="Unclaim this character?"
+                      description={`${character.name} will no longer belong to the current player. The character, XP, classes and items will remain intact and the character will become available for claim again.`}
+                      triggerLabel="Unclaim"
+                      triggerClassName="rounded-xl border border-amber-900/60 bg-amber-950/30 px-3 py-2 text-center text-sm text-amber-300 transition hover:bg-amber-950/60"
+                    >
+                      <form action={unclaimCharacter.bind(null, character.id)}>
+                        <SubmitButton
+                          label="Confirm Unclaim"
+                          pendingLabel="Releasing character..."
+                          variant="danger"
+                        />
+                      </form>
+                    </ConfirmAction>
+                  )}
                   </div>
                 </article>
               );

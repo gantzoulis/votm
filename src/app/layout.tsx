@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VotM 0.03.4",
+  title: "VotM 0.03.7",
   description: "Vault of the Mists",
 };
 

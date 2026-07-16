@@ -3,6 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCampaignAccess } from "@/lib/auth/access";
 import type { Item } from "@/types/votm";
+import { ConfirmAction } from "@/components/forms/ConfirmAction";
+import { SubmitButton } from "@/components/forms/SubmitButton";
+import { unclaimCharacter } from "./[id]/actions";
 
 type PageProps = {
   params: Promise<{

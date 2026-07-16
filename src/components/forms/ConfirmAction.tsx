@@ -61,9 +61,10 @@ export function ConfirmAction({
                 {cancelLabel}
               </button>
 
-              <div onClick={() => setIsOpen(false)}>
-                {children}
-              </div>
+              
+                <div>
+                  {children}
+                </div>
             </div>
           </div>
         </div>
